@@ -9,12 +9,15 @@ namespace slicingroslyn
     {
         private readonly HashSet<SyntaxNode> _relatedNodes;
         private readonly Logger logger;
+        //private int stringCounter = 1;
+        //private readonly Dictionary<string, string> stringMap = new Dictionary<string, string>();
 
         public SubtreeRewriter(HashSet<SyntaxNode> relatedNodes)
         {
             _relatedNodes = relatedNodes;
             logger = new Logger();
         }
+
 
         public override SyntaxNode VisitCompilationUnit(CompilationUnitSyntax node)
         {
@@ -76,10 +79,6 @@ namespace slicingroslyn
         {
             if (_relatedNodes.Contains(node))
             {
-                //var identifierToken = node.Identifier;
-                //var newName = $"Class{++classCount}";
-
-                //var newNode = node.WithIdentifier(SyntaxFactory.Identifier(newName).WithTriviaFrom(identifierToken));
                 return base.VisitClassDeclaration(node);
             }
             return null;
@@ -166,15 +165,6 @@ namespace slicingroslyn
             }
             return null;
         }
-
-        //public override SyntaxNode VisitBlock(BlockSyntax node)
-        //{
-        //    if (_relatedNodes.Contains(node))
-        //    {
-        //        return base.VisitBlock(node);
-        //    }
-        //    return null;
-        //}
 
 
         public override SyntaxNode VisitExpressionStatement(ExpressionStatementSyntax node)
@@ -473,7 +463,16 @@ namespace slicingroslyn
         {
             if (_relatedNodes.Contains(node))
             {
-                return base.VisitLockStatement(node);
+                try
+                {
+                    return base.VisitLockStatement(node);
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e.ToString());
+                    return node;
+                }
+
             }
             return null;
         }
@@ -1204,8 +1203,31 @@ namespace slicingroslyn
                 }
             }
             return null;
-
         }
+
+        //public override SyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node)
+        //{
+        //    // Kiểm tra nếu node là một string literal
+        //    if (node.IsKind(SyntaxKind.StringLiteralExpression))
+        //    {
+        //        var originalText = node.Token.ValueText;
+
+        //        if (!stringMap.ContainsKey(originalText))
+        //        {
+        //            stringMap[originalText] = $"string{stringCounter}";
+        //            stringCounter++;
+        //        }
+
+        //        string newText = stringMap[originalText];
+
+        //        // Tạo một LiteralExpression mới với text đã thay thế
+        //        var newLiteral = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(newText));
+
+        //        return newLiteral;
+        //    }
+
+        //    return base.VisitLiteralExpression(node);
+        //}
 
 
         public override SyntaxNode VisitMakeRefExpression(MakeRefExpressionSyntax node)
@@ -1447,6 +1469,7 @@ namespace slicingroslyn
 
         }
 
+
         public override SyntaxNode VisitSwitchExpressionArm(SwitchExpressionArmSyntax node)
         {
             if (_relatedNodes.Contains(node))
@@ -1465,6 +1488,7 @@ namespace slicingroslyn
             return null;
 
         }
+
 
         public override SyntaxNode VisitTypeOfExpression(TypeOfExpressionSyntax node)
         {
@@ -1485,6 +1509,7 @@ namespace slicingroslyn
 
         }
 
+
         public override SyntaxNode VisitWithExpression(WithExpressionSyntax node)
         {
             if (_relatedNodes.Contains(node))
@@ -1492,6 +1517,83 @@ namespace slicingroslyn
                 try
                 {
                     return base.VisitWithExpression(node);
+                }
+                catch (Exception e)
+                {
+                    logger.Debug(node.ToString());
+                    logger.Error($"Can't get it: {e.ToString()}");
+                    return node;
+                }
+            }
+            return null;
+
+        }
+
+        public override SyntaxNode VisitArrayRankSpecifier(ArrayRankSpecifierSyntax node)
+        {
+            if (_relatedNodes.Contains(node))
+            {
+                try
+                {
+                    return base.VisitArrayRankSpecifier(node);
+                }
+                catch (Exception e)
+                {
+                    logger.Debug(node.ToString());
+                    logger.Error($"Can't get it: {e.ToString()}");
+                    return node;
+                }
+            }
+            return null;
+        }
+
+        public override SyntaxNode VisitPrimaryConstructorBaseType(PrimaryConstructorBaseTypeSyntax node)
+        {
+            if (_relatedNodes.Contains(node))
+            {
+                try
+                {
+                    return base.VisitPrimaryConstructorBaseType(node);
+                }
+                catch (Exception e)
+                {
+                    logger.Debug(node.ToString());
+                    logger.Error($"Can't get it: {e.ToString()}");
+                    return node;
+                }
+            }
+            return null;
+
+        }
+
+
+        public override SyntaxNode VisitCatchFilterClause(CatchFilterClauseSyntax node)
+        {
+            if (_relatedNodes.Contains(node))
+            {
+                try
+                {
+                    return base.VisitCatchFilterClause(node);
+                }
+                catch (Exception e)
+                {
+                    logger.Debug(node.ToString());
+                    logger.Error($"Can't get it: {e.ToString()}");
+                    return node;
+                }
+            }
+            return null;
+
+        }
+
+
+        public override SyntaxNode VisitForEachVariableStatement(ForEachVariableStatementSyntax node)
+        {
+            if (_relatedNodes.Contains(node))
+            {
+                try
+                {
+                    return base.VisitForEachVariableStatement(node);
                 }
                 catch (Exception e)
                 {

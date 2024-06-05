@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "slicing", "slicing\slicing.csproj", "{FCEC636F-5E03-42AF-A316-41C131654E0D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackageDownloadsExample", "D:\File_VA\PackageDownloadsExample\PackageDownloadsExample.csproj", "{9618A287-57D8-4325-BD31-B957EAFDC27B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FCEC636F-5E03-42AF-A316-41C131654E0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FCEC636F-5E03-42AF-A316-41C131654E0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FCEC636F-5E03-42AF-A316-41C131654E0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9618A287-57D8-4325-BD31-B957EAFDC27B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9618A287-57D8-4325-BD31-B957EAFDC27B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9618A287-57D8-4325-BD31-B957EAFDC27B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9618A287-57D8-4325-BD31-B957EAFDC27B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

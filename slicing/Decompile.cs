@@ -11,7 +11,7 @@ namespace slicing
 {
     internal class Decompile
     {
-        private string logDirectory = "log";
+        private string logDirectory = "E:\\PackageDownloader\\logDecompile";
         private string obfuscatedFile = "obfuscatedFile.txt";
         private string errorFile = "errorFile.txt";
         private string finishProcessFile = "finishProcessFile.txt";
@@ -98,6 +98,7 @@ namespace slicing
 
         public void DecompileFilesAndSave(string directoryPath, string outputDirectory)
         {
+            Directory.CreateDirectory(outputDirectory);
             // Đọc file log để lấy danh sách các file đã được xử lý, nếu file log tồn tại
             var processedFiles = new HashSet<string>();
             if (File.Exists(finishProcessFile))
@@ -110,8 +111,9 @@ namespace slicing
                 .Where(file => !processedFiles.Contains(Path.GetFileNameWithoutExtension(file)))
                 .ToList();
 
-            int maxDegreeOfParallelism = 3;
+            int maxDegreeOfParallelism = 5;
             Parallel.ForEach(executableFiles, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, filePath =>
+            //Parallel.ForEach(executableFiles, filePath =>
             {
                 string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
                 string outputFile = Path.Combine(outputDirectory, fileNameWithoutExtension + ".cs");

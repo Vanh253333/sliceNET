@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
@@ -24,14 +17,13 @@ namespace slicingroslyn
 
         private string logDirectory = "log";
         private string namespaceNotFoundFiles = "namespaceNotFoundFiles.txt";
-        //private string namespaceNotFound = "namespaceNotFound.txt";
         private string errorFiles = "errorFiles.txt";
-        //private string logtime = "logtime.txt";
         private string emptySliceFiles = "emptySliceFiles.txt";
         private string finishProcessFile = "finishProcessFile.txt";
         private string timeout = "timeout.txt";
+        private string errorsyntax = "errorsyntax.txt";
 
-        public SemanticSlicing(string fileKeyWordPath, string outputDir, string metadataReferencePath)
+        public SemanticSlicing(string fileKeyWordPath, string outputDir, string metadataReferencePath, string logDir=null)
         {
             logger = new Logger();
 
@@ -55,14 +47,14 @@ namespace slicingroslyn
                 MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.InteropServices.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(assemblyPath,"System.Runtime.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "Microsoft.VisualBasic.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Windows.Forms.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "PInvoke.AdvApi32.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "PInvoke.Crypt32.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "PInvoke.Gdi32.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "PInvoke.Kernel32.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "PInvoke.NTDll.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "PInvoke.Shell32.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "PInvoke.User32.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "System.Windows.Forms.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "PInvoke.AdvApi32.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "PInvoke.Crypt32.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "PInvoke.Gdi32.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "PInvoke.Kernel32.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "PInvoke.NTDll.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "PInvoke.Shell32.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(metadataReferencePath, "PInvoke.User32.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Net.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Net.Sockets.dll")),
             };
@@ -72,11 +64,15 @@ namespace slicingroslyn
             Directory.CreateDirectory(outputDir);
             outputDirectory = outputDir;
 
+            if(logDir  != null)
+            {
+                logDirectory = logDir;
+            }
             Directory.CreateDirectory(logDirectory);
             namespaceNotFoundFiles = Path.Combine(logDirectory, namespaceNotFoundFiles);
             //namespaceNotFound = Path.Combine(logDirectory, namespaceNotFound);
             errorFiles = Path.Combine(logDirectory, errorFiles);
-            //logtime = Path.Combine(logDirectory, logtime);
+            errorsyntax = Path.Combine(logDirectory, errorsyntax);
             emptySliceFiles = Path.Combine(logDirectory, emptySliceFiles);
             finishProcessFile = Path.Combine(logDirectory, finishProcessFile);
             timeout = Path.Combine(logDirectory, timeout);
@@ -111,9 +107,14 @@ namespace slicingroslyn
                 .Where(file => !processedFiles.Contains(Path.GetFileNameWithoutExtension(file)))
                 .ToList();
 
+            //var filesToProcess = new HashSet<string>(File.ReadLines(directorypath))
+            //    .Where(file => !processedFiles.Contains(Path.GetFileNameWithoutExtension(file)))
+            //    .ToList();
+
             Parallel.ForEach(filesToProcess, new ParallelOptions { MaxDegreeOfParallelism = 5 }, file =>
             {
-                ProcessFile(file);
+                var x = Path.Combine("E:\\PackageDownloader\\packageDownloadSource", file + ".cs");
+                ProcessFile(x);
 
             });
         }
@@ -345,21 +346,48 @@ namespace slicingroslyn
         private bool CheckInvocationKeyNode(string fullMethodName)
         {
             bool condition = false;
-            foreach (var key in _keywords["invocation"])
+            if (fullMethodName.Contains("."))
             {
-                if (!key.Contains("."))
-                {
-                    condition = fullMethodName.EndsWith(key);
-                }
-                else
-                {
-                    var lastIndex = key.LastIndexOf(".");
-                    var prefix = key.Substring(0, lastIndex);
-                    var suffix = key.Substring(lastIndex + 1);
-                    condition = fullMethodName.Contains(prefix) && fullMethodName.EndsWith(suffix);
-                }
+                var lastIndexMethodName = fullMethodName.LastIndexOf(".");
+                var prefixMethodName = fullMethodName.Substring(0, lastIndexMethodName);
+                var suffixMethodName = fullMethodName.Substring(lastIndexMethodName + 1);
 
-                if (condition == true) break;
+
+                foreach (var key in _keywords["invocation"])
+                {
+                    if (!key.Contains("."))
+                    {
+                        condition = suffixMethodName.Equals(key);
+                    }
+                    else
+                    {
+                        var lastIndex = key.LastIndexOf(".");
+                        var prefix = key.Substring(0, lastIndex);
+                        var suffix = key.Substring(lastIndex + 1);
+                        condition = prefixMethodName.EndsWith(prefix) && suffixMethodName.Equals(suffix);
+                    }
+
+                    if (condition == true)
+                        break;
+                }
+            }
+            else
+            {
+                foreach (var key in _keywords["invocation"])
+                {
+                    if (!key.Contains("."))
+                    {
+                        condition = fullMethodName.Equals(key);
+                    }
+                    else
+                    {
+                        var lastIndex = key.LastIndexOf(".");
+                        var suffix = key.Substring(lastIndex + 1);
+                        condition = fullMethodName.Equals(suffix);
+                    }
+                    if (condition == true)
+                        break;
+                }
             }
             return condition;
         }
@@ -383,7 +411,7 @@ namespace slicingroslyn
             bool condition = false;
             foreach (var key in _keywords["staticclass"])
             {
-                if (fullMethodName.Contains(key))
+                if (fullMethodName.StartsWith(key))
                 {
                     condition = true;
                     break;
@@ -443,19 +471,15 @@ namespace slicingroslyn
             string containingType = "";
             if (symbolInfo != null)
             {
-                string x = symbolInfo.ContainingNamespace.ToString();
+                string x = "";
                 string y = "";
-                try
-                {
-                    y = symbolInfo.ContainingType.Name;
-                }
-                catch (Exception e)
-                { //logger.Debug(e.Message); 
-                }
-                if (y != "") { containingType = x + "." + y + "."; }
-                else { containingType = x + "."; }
+                try { x = symbolInfo.ContainingNamespace.ToString(); } catch { }
+                try { y = symbolInfo.ContainingType.Name; } catch { }
+
+                if (y != "" && x != "") { containingType = x + "." + y + "."; }
+                else if (y == "" && x != "") { containingType = x + "."; }
+                else if (y != "" && x == "") { containingType = y + "."; }
                 string fullMethodName = containingType + symbolInfo.Name;
-                //Console.WriteLine("yyyy: "+symbolInfo.ToDisplayString());
                 return fullMethodName;
             }
             return "";
@@ -484,7 +508,9 @@ namespace slicingroslyn
 
         private void SaveSlice(SyntaxNode root, List<HashSet<SyntaxNode>> collectedNodes, string filePath, CancellationToken token)
         {
+            HashSet<string> savedSlices = new HashSet<string>();
             bool empty = true;
+
             foreach (var collectedNode in collectedNodes)
             {
                 CheckCancel(token, filePath);
@@ -496,23 +522,32 @@ namespace slicingroslyn
 
                     if (subtree != null)
                     {
-                        string path = Path.Combine(outputDirectory, $"{filePath}.txt");
+                        string fullString = subtree.ToFullString();
 
-                        bool check = SaveStringToFile(subtree.ToFullString(), path, token);
+                        if (savedSlices.Contains(fullString))
+                        {
+                            // If the string has already been saved, skip saving it again.
+                            continue;
+                        }
+
+                        string path = Path.Combine(outputDirectory, $"{filePath}.txt");
+                        bool check = SaveStringToFile(fullString, path, token);
                         if (check)
                         {
                             logger.Sucess("Done and saved to: " + path);
                             empty = false;
+                            savedSlices.Add(fullString); // Add the slice to the saved set.
                         }
+
+
                     }
                 }
                 catch (Exception e)
                 {
                     logger.Error("Error rewrite syntaxtree: " + e.ToString());
-                    FileWrite(errorFiles, "mising slice, " + filePath);
+                    FileWrite(errorFiles, "missing slice, " + filePath);
+                    FileWrite(errorsyntax, $"file: {filePath} \n {e.ToString()} \n");
                 }
-
-
             }
 
             if (empty)
@@ -547,6 +582,20 @@ namespace slicingroslyn
                 logger.Error("An error occurred while writing to the file: " + e.Message);
                 return false;
             }
+        }
+
+        private bool CheckObfuscation(HashSet<SyntaxNode> collectedNode, string fullString)
+        {
+            var node = collectedNode.OfType<ExpressionSyntax>().FirstOrDefault();
+            if (node != null)
+            {
+                string nodeString = node.ToFullString();
+                if (!fullString.Contains(nodeString))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private bool IsDllImportMethod(MethodDeclarationSyntax methodDeclaration)
